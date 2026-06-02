@@ -20,5 +20,5 @@ def clothing_note(req: ClothingRequest):
         result = f"今天温度{temp}度,温度适宜建议穿薄外套"
     else:
         result = f"今天温度{temp}度,偏热可以穿短袖"
-
+    print(f"调用穿衣建议api,返回结果:{result}")
     return ApiResponse(data=result)

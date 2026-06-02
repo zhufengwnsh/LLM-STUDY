@@ -19,4 +19,5 @@ def get_weather(city: str = Query(..., description="城市名称")):
     else:
         data="哈尔滨 当前的温度：12摄氏度"
     # 模拟真实接口返回数据
+    print(f"调用温度查询api,返回结果:{data}")
     return ApiResponse(data=data)

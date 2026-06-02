@@ -14,6 +14,7 @@ def chat(req: ChatRequest):
     聊天接口：接收用户消息，调用 LangChain Agent 返回回答
     请求体: {"content": "北京今天多少度？穿什么衣服？"}
     """
+    print(f"调用聊天接口,content:{req.content}")
     response = agent.invoke({
         "messages": [
             {"role": "user", "content": req.content}
