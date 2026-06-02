@@ -10,7 +10,7 @@ def generate_clothing_note(temp: float) -> str:
     try:
         # 调用本地接口 2
         resp = requests.post(
-            "http://127.0.0.1:8000/clothing-note",
+            "http://127.0.0.1:8080/api/clothing/note",
             json={"temperature": temp},
             timeout=10
         )
