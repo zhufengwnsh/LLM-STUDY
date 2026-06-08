@@ -85,4 +85,4 @@ class LazyAgent:
         return self._ensure().invoke(*args, **kwargs)
 
 
-agent = LazyAgent()
+lazyMcpAgent = LazyAgent()
