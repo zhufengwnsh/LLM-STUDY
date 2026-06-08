@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi_mcp import FastApiMCP
 import logging
 from langchain_core.globals import set_debug, set_verbose
+import graph.add_multi
 
 # 开启全量DEBUG日志
 set_debug(True)    # 打印完整：prompt、LLM入参、LLM原始返回、工具入参、工具返回值
