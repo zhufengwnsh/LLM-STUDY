@@ -16,6 +16,8 @@ def get_weather(city: str = Query(..., description="城市名称")):
         data="北京 当前的温度：22摄氏度"
     elif(city.startswith("上海")):
         data="上海 当前的温度：32摄氏度"
+    elif(city.startswith("武汉")):
+        data="武汉 当前的温度：39摄氏度"
     else:
         data="哈尔滨 当前的温度：12摄氏度"
     # 模拟真实接口返回数据
