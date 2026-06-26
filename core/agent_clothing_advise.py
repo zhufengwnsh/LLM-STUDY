@@ -158,12 +158,13 @@ class MCPAgent:
     # Public API
     # ------------------------------------------------------------------
 
-    def run(self, content: str) -> str:
-        """执行智能助手流程
+    def run(self, content: str, **kwargs) -> str:
+        """执行智能助手流程（新会话入口）
 
         Args:
             content: 用户输入
-            
+            **kwargs: 额外参数（如 lng、lat 等），会自动拼接到 content 中
+
         Returns:
             LLM 的原始返回文本
         """
@@ -172,6 +173,13 @@ class MCPAgent:
         if self._agent is None:
             self._agent = self._build_agent()
 
+        # 如果有额外参数，拼接到 content 中让 LLM 感知到
+        if kwargs:
+            extra_parts = []
+            for k, v in kwargs.items():
+                extra_parts.append(f"{k}: {v}")
+            extra_str = "\n".join(extra_parts)
+            content = f"{content}\n\n[额外参数]\n{extra_str}"
 
         initial_state = {
             "messages": [HumanMessage(content=content)],
@@ -180,6 +188,103 @@ class MCPAgent:
         result = self._agent.invoke(initial_state)
         final_message = result["messages"][-1]
         return final_message.content
+
+    def run_with_history(
+        self,
+        content: str,
+        history_messages: list[AnyMessage],
+        **kwargs,
+    ) -> str:
+        """带历史消息继续对话
+
+        将新的用户输入追加到历史消息末尾，让 LLM 感知完整上下文。
+
+        Args:
+            content: 新的用户输入
+            history_messages: 之前的完整消息列表（从 session 中恢复）
+            **kwargs: 额外参数，会自动拼接到 content 中
+
+        Returns:
+            LLM 的原始返回文本
+        """
+        self._ensure_tools()
+
+        if self._agent is None:
+            self._agent = self._build_agent()
+
+        # 如果有额外参数，拼接到 content 中让 LLM 感知到
+        if kwargs:
+            extra_parts = []
+            for k, v in kwargs.items():
+                extra_parts.append(f"{k}: {v}")
+            extra_str = "\n".join(extra_parts)
+            content = f"{content}\n\n[额外参数]\n{extra_str}"
+
+        # 历史消息 + 新的用户输入
+        messages = list(history_messages) + [HumanMessage(content=content)]
+
+        initial_state = {"messages": messages}
+
+        result = self._agent.invoke(initial_state)
+        final_message = result["messages"][-1]
+        return final_message.content
+
+    def get_full_messages(self, content: str, **kwargs) -> tuple[str, list[AnyMessage]]:
+        """执行并返回完整消息列表（新会话）
+
+        Returns:
+            (final_response_text, full_messages_list)
+        """
+        self._ensure_tools()
+
+        if self._agent is None:
+            self._agent = self._build_agent()
+
+        if kwargs:
+            extra_parts = []
+            for k, v in kwargs.items():
+                extra_parts.append(f"{k}: {v}")
+            extra_str = "\n".join(extra_parts)
+            content = f"{content}\n\n[额外参数]\n{extra_str}"
+
+        initial_state = {
+            "messages": [HumanMessage(content=content)],
+        }
+
+        result = self._agent.invoke(initial_state)
+        final_message = result["messages"][-1]
+        return final_message.content, result["messages"]
+
+    def get_full_messages_with_history(
+        self,
+        content: str,
+        history_messages: list[AnyMessage],
+        **kwargs,
+    ) -> tuple[str, list[AnyMessage]]:
+        """带历史消息继续对话，返回完整消息列表
+
+        Returns:
+            (final_response_text, full_messages_list_after_invoke)
+        """
+        self._ensure_tools()
+
+        if self._agent is None:
+            self._agent = self._build_agent()
+
+        if kwargs:
+            extra_parts = []
+            for k, v in kwargs.items():
+                extra_parts.append(f"{k}: {v}")
+            extra_str = "\n".join(extra_parts)
+            content = f"{content}\n\n[额外参数]\n{extra_str}"
+
+        messages = list(history_messages) + [HumanMessage(content=content)]
+
+        initial_state = {"messages": messages}
+
+        result = self._agent.invoke(initial_state)
+        final_message = result["messages"][-1]
+        return final_message.content, result["messages"]
 
 
 # 默认单例

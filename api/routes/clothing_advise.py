@@ -15,6 +15,7 @@ from typing import Optional
 from api.models.responses import ApiResponse
 from api.checkpoint import checkpoint_store
 from core.agent_clothing_advise import MCPAgent
+from langchain_core.load import dumps, loads
 
 router = APIRouter(prefix="/api/clothing_advise", tags=["ClothingAdvise"])
 
@@ -26,10 +27,16 @@ class AdviseRequest(BaseModel):
 
 
 class LocationRequest(BaseModel):
-    """经纬度请求体"""
+    """补充信息的请求体
+
+    content 可以是任意自然语言，例如：
+    - "我在北京"
+    - "116.4,39.9"
+    - "上海市浦东新区"
+    LLM 会自主理解并决定如何调用工具。
+    """
     session_id: str
-    lng: float
-    lat: float
+    content: str
 
 
 # 全局单例 Agent（延迟加载 MCP 工具）
@@ -42,76 +49,84 @@ def advise(req: AdviseRequest):
     通用智能助手接口
 
     所有决策由 LLM 自主完成，路由层不做任何业务假设。
-    仅通过 session_id 支持多步骤会话：
-    - 无 session_id → 新会话，交给 LLM 处理
-    - 有 session_id → 恢复上下文，结合新输入交给 LLM
+    通过 session_id 支持多步骤会话，session 中保存完整消息历史。
 
     请求体:
     - content: 用户输入
     - session_id: 可选，首次不传
     """
     if not req.session_id:
-        # 新会话，直接交给 LLM
-        result = _agent.run(content=req.content)
+        # ========== 新会话 ==========
+        text, messages = _agent.get_full_messages(content=req.content)
 
-        # 创建 session 保存上下文，支持后续继续交互
-        session_id = checkpoint_store.create_session({
-            "original_content": req.content,
-        })
+        # 序列化完整消息历史并存入 session
+        session_id = checkpoint_store.create_session()
         checkpoint_store.update_session(session_id, {
-            "last_response": result,
+            "messages": dumps(messages),
         })
         checkpoint_store.set_step(session_id, "active")
 
         return ApiResponse(data={
             "session_id": session_id,
-            "message": result,
+            "message": text,
         })
 
-    # 已有会话
+    # ========== 已有会话 ==========
     session = checkpoint_store.get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=400, detail="session_id 无效或已过期")
 
-    # 交给 LLM（带上新输入）
-    result = _agent.run(content=req.content)
+    # 从 session 恢复历史消息
+    history_messages = loads(session["context"].get("messages", "[]"))
 
-    # 更新上下文
+    # 新输入追加到历史后交给 LLM
+    text, messages = _agent.get_full_messages_with_history(
+        content=req.content,
+        history_messages=history_messages,
+    )
+
+    # 更新会话中的消息历史
     checkpoint_store.update_session(req.session_id, {
-        "last_response": result,
+        "messages": dumps(messages),
     })
 
     return ApiResponse(data={
         "session_id": req.session_id,
-        "message": result,
+        "message": text,
     })
 
 
 @router.post("/location", response_model=ApiResponse)
 def update_location(req: LocationRequest):
     """
-    提供额外参数后的处理接口
+    用户补充信息的接口
+
+    LLM 如果发现自己缺少必要信息（如地理位置），会通过之前的回复引导用户提供。
+    用户提供信息后，前端调用此接口将信息传入，LLM 结合完整会话历史继续处理。
 
     请求体:
     - session_id: 会话 ID
-    - lng: 经度
-    - lat: 纬度
+    - content: 用户的补充信息（自然语言），例如 "我在北京"、"116.4,39.9"
     """
     session = checkpoint_store.get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=400, detail="session_id 无效或已过期")
 
-    original_content = session.get("context", {}).get("original_content", "")
+    # 从 session 恢复完整历史消息
+    history_messages = loads(session["context"].get("messages", "[]"))
 
-    # 将额外参数传给 Agent，LLM 自主决定如何使用
-    result = _agent.run(
-        content=original_content,
-        lng=req.lng,
-        lat=req.lat,
+    # 将用户的新输入追加到历史末尾，LLM 感知完整上下文后继续处理
+    text, messages = _agent.get_full_messages_with_history(
+        content=req.content,
+        history_messages=history_messages,
     )
 
-    checkpoint_store.delete_session(req.session_id)
+    # 更新会话中的消息历史（不删除 session，对话可以继续）
+    checkpoint_store.update_session(req.session_id, {
+        "messages": dumps(messages),
+    })
 
     return ApiResponse(data={
-        "message": result,
+        "session_id": req.session_id,
+        "message": text,
     })

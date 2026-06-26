@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": {
+    "api-documenter": {
+      "source": "alirezarezvani/claude-code-tresor",
+      "sourceType": "github",
+      "skillPath": "skills/documentation/api-documenter/SKILL.md",
+      "computedHash": "3194f6f85fc970582e739fbc209aede6bb38ddbf5e9cc0e50c0203306a9f7170"
+    },
+    "code-reviewer": {
+      "source": "alirezarezvani/claude-code-tresor",
+      "sourceType": "github",
+      "skillPath": "skills/development/code-reviewer/SKILL.md",
+      "computedHash": "3c77c6a98080192b7c95d1b10ee0435848f10463eb6e35d984f60792621f5cfa"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "781bd6d3f9b19f8c9af6b53d8d0e4876d0183841b565db34ca7092ffa412d111"
+    },
+    "plan-mode": {
+      "source": "vercel-labs/open-agents",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/plan-mode/SKILL.md",
+      "computedHash": "fccffcb9ca28c7b716eb237036b13f394d422b7fbf5d508515f199154713a1fd"
+    },
+    "plan-orchestrate": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/plan-orchestrate/SKILL.md",
+      "computedHash": "863b6cf5fab9780c7621d73b2d6cd19b69feaaa0172638a9e9e14eb048b1d4e8"
+    },
+    "requirements-gathering": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "skillPath": "skills/requirements-gathering/SKILL.md",
+      "computedHash": "f5ed701308d3e6089fb1d9af81d36cd9685fc8b8462898461c490dd36d41a83d"
+    },
+    "spec-driven-implementation": {
+      "source": "warpdotdev/common-skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/spec-driven-implementation/SKILL.md",
+      "computedHash": "0e586fa2849e33f2d6c1af2110c94a54213777f2594bd34f41409fe637bbbbcd"
+    },
+    "springboot-patterns": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/springboot-patterns/SKILL.md",
+      "computedHash": "53d5b6bb0260abaafd096e4574a9b9b1976d6ed5744c2a175eddd195d37c27f1"
+    },
+    "test-generator": {
+      "source": "alirezarezvani/claude-code-tresor",
+      "sourceType": "github",
+      "skillPath": "skills/development/test-generator/SKILL.md",
+      "computedHash": "74421d4b79a099b9889c919719c54af9d532d93974743da36da45aeb7a9bb9c3"
+    }
+  }
+}
